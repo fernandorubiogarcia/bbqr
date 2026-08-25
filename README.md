@@ -281,7 +281,7 @@ Applied Econometrics*, 27(7), 1174–1188.
 
 Benoit, D. F., Al-Hamzawi, R. and Yu, K. (2013). Bayesian lasso binary quantile
 regression. *Computational Statistics*, 28(6), 2861–2873.
-[doi:10.1007/s00180-013-0407-8](https://doi.org/10.1007/s00180-013-0407-8)
+[doi:10.1007/s00180-013-0439-0](https://doi.org/10.1007/s00180-013-0439-0)
 
 Kozumi, H. and Kobayashi, G. (2011). Gibbs sampling methods for Bayesian
 quantile regression. *Journal of Statistical Computation and Simulation*,

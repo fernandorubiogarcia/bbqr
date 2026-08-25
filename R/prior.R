@@ -165,7 +165,7 @@
 #'
 #' Benoit, D. F., Al-Hamzawi, R. and Yu, K. (2013). Bayesian lasso binary
 #' quantile regression. \emph{Computational Statistics}, 28(6), 2861--2873.
-#' \doi{10.1007/s00180-013-0407-8}
+#' \doi{10.1007/s00180-013-0439-0}
 #'
 #' @examples
 #' # Default adaptive-lasso prior: the fully proper "v5" hierarchy

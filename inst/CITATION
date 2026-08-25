@@ -38,7 +38,7 @@ citFooter(
   "The lasso and unpenalised samplers implement published methods. Please ",
   "also cite the paper for the layer you used. Binary: Benoit and Van den ",
   "Poel (2012, doi:10.1002/jae.1216) for penalty = \"none\"; Benoit, ",
-  "Al-Hamzawi and Yu (2013, doi:10.1007/s00180-013-0407-8) for ",
+  "Al-Hamzawi and Yu (2013, doi:10.1007/s00180-013-0439-0) for ",
   "penalty = \"lasso\". Continuous: Kozumi and Kobayashi ",
   "(2011, doi:10.1080/00949655.2010.496117) for cbqr_none(), whose kernel ",
   "is their sampler; Benoit, Al-Hamzawi and Yu (2013) for cbqr_lasso(), ",
