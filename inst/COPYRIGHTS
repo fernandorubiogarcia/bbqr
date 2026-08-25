@@ -24,7 +24,9 @@ src/wrapper.c
 Original components
 -------------------
 
-The three MCMC kernels shipped in this package were written for it:
+All six MCMC kernels shipped in this package were written for it.
+
+Binary response, observed through a threshold:
 
     src/QRb_BQR_mcmc.f95   unpenalised binary quantile regression,
                            implementing Benoit and Van den Poel (2012)
@@ -33,5 +35,17 @@ The three MCMC kernels shipped in this package were written for it:
     src/QRb_AL_mcmc.f95    adaptive-lasso binary quantile regression, with
                            the identification anchors described in ?bbqr
 
+Observed continuous response:
+
+    src/QRc_BQR_mcmc.f95   unpenalised quantile regression; the kernel is the
+                           sampler of Kozumi and Kobayashi (2011)
+    src/QRc_L_mcmc.f95     lasso quantile regression, carrying the hierarchy
+                           of Benoit, Al-Hamzawi and Yu (2013) over to an
+                           observed response
+    src/QRc_AL_mcmc.f95    adaptive-lasso quantile regression; at its default
+                           q = 1 it reproduces the penalty of Alhamzawi, Yu
+                           and Benoit (2012)
+
 They implement published algorithms, which are cited on the corresponding
-help pages, but the code is not derived from the bayesQR kernels.
+help pages and in inst/CITATION, but the code is not derived from the bayesQR
+kernels.

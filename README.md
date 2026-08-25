@@ -1,7 +1,8 @@
 # bbqr
 
 <!-- badges: start -->
-[![License: GPL (>= 2)](https://img.shields.io/badge/License-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+[![R-CMD-check](https://github.com/fernandorubiogarcia/bbqr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fernandorubiogarcia/bbqr/actions/workflows/R-CMD-check.yaml)
+[![License: GPL (>= 2)](https://img.shields.io/badge/License-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 [![R >= 4.2](https://img.shields.io/badge/R-%3E%3D%204.2-blue.svg)](https://cran.r-project.org/)
 <!-- badges: end -->
 
@@ -112,10 +113,19 @@ lasso, on $\delta$), and a $\tau$-calibrated normal prior on the intercept —
 the moment match to the prior under which $\Pr(y = 1)$ is exactly uniform at
 $x'\beta = 0$, so that it is centred away from zero when $\tau \neq 0.5$. The
 observed likelihood is bounded by one, so the posterior is proper with no
-condition on the design, on the number of covariates, or on the anchor. In the
-simulation study behind the package the corrected hierarchy beat the published
-one on every accuracy, calibration and mixing metric, paired scenario by
-scenario.
+condition on the design, on the number of covariates, or on the anchor.
+
+Paired against the published hierarchy on the same scenarios (design `d1`,
+reps 1–72, a cell counted only at $|z| \geq 3$), the corrected one wins on the
+proper interval score (Winkler-95, 65–1, median +15.0%), on raw RMSE (64–0,
+median +4.8%), on intercept MAE (62–3) and on correct selection (48–0). It is
+not a clean sweep, and the exceptions are the informative part: the slopes
+alone are close to a wash (35–26, median +0.4%), and the corrected hierarchy
+produces **wider** intervals, losing 26–33 on `width95` and 10–48 on `width50`.
+Winkler is what says that width is worth paying for, since it charges for
+miscalibration and excess width together. The gain is concentrated in the
+intercept, which is the $\tau$-calibrated prior doing the work rather than the
+prior on $\omega$. Mixing was not part of that comparison.
 
 `"v4"` is the intermediate step for the adaptive lasso — proper $\omega$, flat
 intercept — and is proper only conditionally.
@@ -158,12 +168,16 @@ All five are available for every penalty except `penalty = "none"` with
 `anchor = "free"`, which is refused: with neither a penalty nor an anchor the
 likelihood is flat along the scale ray and nothing identifies the model.
 
-`"sigma1"` is the default because it closes the scale ray outright. With the
-ray closed, four hierarchy arms in the simulation study agreed on raw RMSE to
-within 4%; with it open (`"free"`) they spread over 4.5×, and every bit of that
-spread was impropriety rather than non-identification. `"free"` has equally
-good point estimates but credible intervals about half again as wide at the
-median, because a sampled $\sigma$ lets the unidentified scale inflate them.
+`"sigma1"` is the default because it closes the scale ray outright. What the
+anchor does and does not change is visible in the 24-method study, on the
+adaptive-lasso arms: measured on the identified direction the five anchors
+agree closely, oracle-rescaled RMSE spanning 0.224 to 0.256, a 14% spread;
+measured on the raw scale they span 0.88 to 3.05, which is the anchors being
+different scale conventions rather than different fits. `"free"` has point
+estimates as good as `"sigma1"` (rescaled RMSE 0.2331 against 0.2319) but
+credible intervals about half again as wide at the median (`width95` ratio
+1.44 at $\tau = 0.5$), because a sampled $\sigma$ lets the unidentified scale
+inflate them.
 It is the sampled-$\sigma$ convention of the adaptive-lasso and lasso
 derivations, and it stays one argument away. **Identification is fixed by the
 anchor, propriety by the prior. Both are needed; neither substitutes.**
@@ -249,9 +263,9 @@ Benoit and Van den Poel (2012) use Metropolis–Hastings. It targets the same
 posterior by a different algorithm.
 
 The Fortran RNG bridge (`src/wrapper.c`) and the package layout derive from
-`bayesQR`, which is GPL (>= 2) and is credited in `Authors@R`. The three MCMC
-kernels
-were written for this package; see `inst/COPYRIGHTS` for the full breakdown.
+`bayesQR`, which is GPL (>= 2) and is credited in `Authors@R`. All six MCMC
+kernels — three binary, three continuous — were written for this package; see
+`inst/COPYRIGHTS` for the full breakdown.
 
 ## References
 
