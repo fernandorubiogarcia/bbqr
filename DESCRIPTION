@@ -1,7 +1,7 @@
 Package: bbqr
 Type: Package
 Title: Bayesian Quantile Regression with Lasso and Adaptive Lasso
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: c(
     person("Fernando", "Rubio Garcia", email = "j332v755@wichita.edu",
            role = c("aut", "cre"),
@@ -40,7 +40,7 @@ Copyright: See inst/COPYRIGHTS for the attribution of third-party
 Encoding: UTF-8
 Depends: R (>= 4.2)
 Imports: graphics, stats, utils
-Suggests: testthat (>= 3.0.0), coda, knitr, rmarkdown, quantreg
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown, quantreg
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 NeedsCompilation: yes

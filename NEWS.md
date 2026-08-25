@@ -1,6 +1,16 @@
+# bbqr (development version)
+
+* `coda` is dropped from `Suggests`. It was declared but never used: no code,
+  test, example or vignette referenced it.
+
+* `src/Makevars` no longer links BLAS and LAPACK. None of the six kernels
+  calls a routine from either -- the linear algebra is written out in the
+  Fortran -- so the link line named libraries the package has never used.
+  `$(FLIBS)` stays, which is the part Fortran actually requires.
+
 # bbqr 0.1.0
 
-First release.
+First release, submitted to CRAN on 2026-08-25.
 
 The package went through three internal revisions before this one. None was
 released anywhere, so there is no upgrade path to describe -- but the decisions
