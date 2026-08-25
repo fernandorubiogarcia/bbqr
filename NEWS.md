@@ -1,4 +1,12 @@
-# bbqr 0.3.0
+# bbqr 0.1.0
+
+First release.
+
+The package went through three internal revisions before this one. None was
+released anywhere, so there is no upgrade path to describe -- but the decisions
+taken along the way are what set the defaults, and a default that was chosen
+against a measured alternative is worth knowing about when interpreting a fit.
+That is what the rest of this file records.
 
 ## Continuous-response quantile regression
 
@@ -110,9 +118,7 @@
   thesis. The four `cbqr` pages gained examples, references and cross-links,
   so `R CMD check` now exercises the continuous code it previously skipped.
 
-# bbqr 0.2.0
-
-## The default hierarchy is now the one whose posterior exists
+## The default hierarchy is the one whose posterior exists
 
 * `prior()` defaults to `model = "v5"` for every penalty. The published
   adaptive-lasso and lasso hierarchies (`model = "v3"`) have no posterior:
@@ -170,8 +176,9 @@
   `diagnose_hyperparams.R`) now pass `model = "v3"` explicitly, so re-running
   them reproduces what they reported rather than picking up the new default.
 
-# bbqr 0.1.0
+## Where it started
 
-* First working version: adaptive-lasso, lasso and unpenalised binary
-  quantile regression with five identification anchors behind one interface.
-  Neither this nor 0.2.0 was released to CRAN; 0.3.0 is the first submission.
+* The first working version fitted adaptive-lasso, lasso and unpenalised
+  **binary** quantile regression, with five identification anchors behind one
+  interface. Everything above was built on top of that, and none of it reached
+  CRAN before this release.

@@ -5,7 +5,7 @@ bibentry(
   title    = "{bbqr}: Bayesian Quantile Regression with Lasso and Adaptive Lasso",
   author   = person("Fernando", "Rubio Garcia"),
   year     = "2026",
-  note     = "R package version 0.3.0",
+  note     = "R package version 0.1.0",
   url      = "https://github.com/fernandorubiogarcia/bbqr"
 )
 
