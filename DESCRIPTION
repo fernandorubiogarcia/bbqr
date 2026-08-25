@@ -4,7 +4,8 @@ Title: Bayesian Quantile Regression with Lasso and Adaptive Lasso
 Version: 0.3.0
 Authors@R: c(
     person("Fernando", "Rubio Garcia", email = "j332v755@wichita.edu",
-           role = c("aut", "cre")),
+           role = c("aut", "cre"),
+           comment = "Wichita State University"),
     person("Dries F.", "Benoit", role = c("ctb", "cph"),
            comment = "Author of 'bayesQR', from which the Fortran RNG wrapper and package layout are derived"),
     person("Rahim", "Al-Hamzawi", role = "ctb"),

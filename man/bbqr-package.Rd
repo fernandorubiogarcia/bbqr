@@ -83,7 +83,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Fernando Rubio Garcia \email{j332v755@wichita.edu}
+\strong{Maintainer}: Fernando Rubio Garcia \email{j332v755@wichita.edu} (Wichita State University)
 
 Other contributors:
 \itemize{
