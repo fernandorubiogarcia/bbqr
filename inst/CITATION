@@ -1,0 +1,46 @@
+citHeader("To cite bbqr in publications use:")
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "{bbqr}: Bayesian Quantile Regression with Lasso and Adaptive Lasso",
+  author   = person("Fernando", "Rubio Garcia"),
+  year     = "2026",
+  note     = "R package version 0.3.0",
+  url      = "https://github.com/fernandorubiogarcia/bbqr"
+)
+
+bibentry(
+  bibtype  = "MastersThesis",
+  title    = "Bayesian adaptive lasso binary quantile regression with hybrid resampling for classification of imbalanced data",
+  author   = person("Fernando", "Rubio Garcia"),
+  school   = "Wichita State University, Dept. of Mathematics, Statistics, and Physics",
+  year     = "2023",
+  url      = "https://soar.wichita.edu/entities/publication/a2f86232-4704-4ec2-b685-751e7b04ec42",
+  header   = "For the binary adaptive-lasso method (bbqr_alasso) cite:"
+)
+
+bibentry(
+  bibtype  = "Article",
+  title    = "Bayesian adaptive Lasso quantile regression",
+  author   = c(person("Rahim", "Alhamzawi"), person("Keming", "Yu"),
+               person("Dries F.", "Benoit")),
+  journal  = "Statistical Modelling",
+  year     = "2012",
+  volume   = "12",
+  number   = "3",
+  pages    = "279--297",
+  doi      = "10.1177/1471082X1101200304",
+  header   = paste("The continuous adaptive lasso (cbqr_alasso) at its",
+                   "default q = 1 reproduces the penalty of:")
+)
+
+citFooter(
+  "The lasso and unpenalised samplers implement published methods. Please ",
+  "also cite the paper for the layer you used. Binary: Benoit and Van den ",
+  "Poel (2012, doi:10.1002/jae.1216) for penalty = \"none\"; Benoit, ",
+  "Al-Hamzawi and Yu (2013, doi:10.1007/s00180-013-0407-8) for ",
+  "penalty = \"lasso\". Continuous: Kozumi and Kobayashi ",
+  "(2011, doi:10.1080/00949655.2010.496117) for cbqr_none(), whose kernel ",
+  "is their sampler; Benoit, Al-Hamzawi and Yu (2013) for cbqr_lasso(), ",
+  "whose hierarchy is theirs carried over to an observed response."
+)

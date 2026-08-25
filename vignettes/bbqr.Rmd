@@ -1,0 +1,359 @@
+---
+title: "Binary and continuous quantile regression, and the anchor you have to choose"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Binary and continuous quantile regression, and the anchor you have to choose}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6,
+                      fig.height = 4)
+library(bbqr)
+set.seed(2026)
+```
+
+The package fits the same three penalties to two kinds of response: a **binary**
+one through `bbqr()`, and an **observed continuous** one through `cbqr()`. Most
+of this vignette is about the binary case, because that is where the hard
+problem is. If your response is observed, skip to
+[When the response is observed](#when-the-response-is-observed) — the anchor
+machinery below simply does not apply to you.
+
+## The problem this package exists to solve
+
+Quantile regression on a binary outcome has an awkward property that continuous
+quantile regression does not. The model is
+
+$$y_i = \mathbb{1}\{\beta_0 + x_i'\beta + \varepsilon_i > 0\},$$
+
+and $\mathrm{sign}(\beta_0 + x'\beta + \varepsilon)$ does not change if you
+multiply $\beta_0$, $\beta$ and the error scale by the same positive constant.
+The data therefore identify only the *direction* of $\beta$, never its length.
+
+Every method has to pin the scale down somehow, and existing packages each make
+that choice internally without exposing it. `bbqr` makes it an argument, so the
+choice can be compared rather than assumed.
+
+There is a second problem, separate from the first and easy to confuse with
+it. The published hierarchies for the penalised samplers have *no posterior*:
+their prior on the global shrinkage scale is not integrable, and a Gibbs
+sampler on such a target runs without complaint while producing numbers that
+depend on chain length and seed. `bbqr` ships each hierarchy in two forms and
+defaults to the one that exists. That is the subject of the section *Two
+hierarchies* below; identification is fixed by the anchor, propriety by the
+prior, and neither substitutes for the other.
+
+## Fitting a model
+
+The interface is one function. `penalty` picks the shrinkage layer, `anchor`
+picks the identification restriction, and `model` on the `prior()` object
+picks the hierarchy.
+
+```{r fit}
+n <- 300
+X <- matrix(rnorm(n * 5), n, 5, dimnames = list(NULL, paste0("x", 1:5)))
+truth <- c(1.5, -1, 0.8, 0, 0)
+y <- as.numeric(X %*% truth + rnorm(n) > 0)
+dat <- data.frame(y = y, X)
+
+fit <- bbqr(y ~ x1 + x2 + x3 + x4 + x5, data = dat,
+            quantile = 0.5, penalty = "alasso",
+            ndraw = 2000, burn = 500)
+fit
+```
+
+`summary()` adds credible intervals and flags the coefficients whose interval
+excludes zero, which is the variable-selection rule used with these samplers.
+
+```{r summary}
+summary(fit)
+```
+
+Note the reminder in the footer. The coefficients are identified only up to a
+positive scale, so their *magnitudes* are only interpretable relative to the
+anchor you chose. Ratios of coefficients, and the sign pattern, are what carry
+meaning across anchors.
+
+## Three penalties
+
+The penalties share the latent-variable augmentation and differ only in what
+sits above the slopes: `"none"` puts a vague normal prior on each slope
+(Benoit and Van den Poel, 2012), `"lasso"` uses one shrinkage parameter for all
+slopes (Benoit, Al-Hamzawi and Yu, 2013), and `"alasso"` gives each slope its
+own (Rubio Garcia, 2023).
+
+```{r penalties}
+pens <- c("none", "lasso", "alasso")
+est <- sapply(pens, function(p)
+  coef(bbqr(y ~ x1 + x2 + x3 + x4 + x5, data = dat, penalty = p,
+            ndraw = 2000, burn = 500)))
+round(est, 3)
+```
+
+The columns are not on a common scale — each sampler lands wherever its own
+anchor puts it — so compare directions rather than levels:
+
+```{r penalty-direction}
+cosine <- function(a, b) sum(a * b) / sqrt(sum(a^2) * sum(b^2))
+round(apply(est[-1, ], 2, cosine, truth), 4)
+```
+
+On data this clean the three penalties are nearly indistinguishable. That is
+worth knowing: the penalty is not usually where the leverage is.
+
+## Two hierarchies
+
+Each penalty is available as published (`model = "v3"`) and in a corrected
+form (`model = "v5"`, the default). The print method of `prior()` says which
+is which:
+
+```{r hierarchies}
+prior("alasso")
+prior("alasso", model = "v3")
+```
+
+The defect in the published adaptive lasso is the hyperprior
+$p(\omega) \propto 1/\omega$ on the global shrinkage scale. The hierarchy is a
+scale family in $\omega$: on the ray where $\omega$, every $\lambda_j^2$ and
+every latent $s_j$ shrink to zero together with $\beta_j = O(\sqrt{\omega})$,
+the prior measure is $d\omega/\omega$ while the likelihood stays bounded
+below, so the normalising integral diverges. That holds for every prior on
+$\delta$ and at either anchor. The published lasso carries the same defect in
+$\tau_h$. Nothing about the *sampler* is wrong — every full conditional is a
+proper distribution, which is exactly why the problem never announces itself.
+
+`"v5"` puts a $\mathrm{Gamma}(2, 2)$ prior on the global scale, a proper prior
+on $\delta$ where the published one was flat, and a $\tau$-calibrated normal
+prior on the intercept. Every component is then a probability distribution,
+the observed likelihood is bounded by one, and the posterior exists with no
+condition on the design, on the number of covariates, or on the anchor.
+
+The observable signature is where $\omega$ spends its time. Under the
+published prior it piles up near zero; the $\mathrm{Gamma}(2, 2)$ density
+vanishes linearly at the origin and stops it:
+
+```{r omega}
+om <- sapply(c(v3 = "v3", v5 = "v5"), function(m)
+  bbqr(y ~ x1 + x2 + x3 + x4 + x5, dat, ndraw = 4000, burn = 1000,
+       prior = prior("alasso", model = m))$omega)
+signif(apply(om, 2, quantile, c(0, 0.01, 0.1, 0.5)), 3)
+```
+
+This is a diagnostic rather than a proof — a Gibbs sampler on an improper
+target is null-recurrent, so a short chain can miss the drift entirely — but
+it is the mechanism, and on longer chains the published hierarchy's $\omega$
+drifts without bound while `"v5"`'s does not.
+
+Under `"v5"` the package refuses every device its derivation excludes: the
+numerical clamps, the sampler-argument floors, the historical inverse-Gaussian
+routine for the latents and the $\exp(-\kappa/\lambda_j^2)$ tilt. Those
+devices existed because the published hierarchy needed them, and `"v3"` keeps
+them reachable so that earlier runs can be reproduced. The fitted object
+records which hierarchy it sampled in `model`, and whether the chain targets a
+derived posterior in `derived`.
+
+## Five anchors
+
+```{r anchors-table, echo = FALSE}
+knitr::kable(data.frame(
+  anchor = c("sigma1", "free", "beta1", "norm1", "normslopes"),
+  restriction = c("ALD inverse-scale held at 1", "none beyond the prior",
+                  "first slope held at 1",
+                  "||(beta0, beta)|| = 1", "||beta|| = 1, slopes only"),
+  available = c("all", "lasso, alasso", "all", "all", "all")
+), caption = "Anchors, and which penalties accept them.")
+```
+
+`penalty = "none"` with `anchor = "free"` is deliberately not offered. With
+neither a penalty nor an anchor the likelihood is flat along the scale ray, so
+nothing identifies the model and only the vague prior stops the chain drifting.
+
+`"sigma1"` is the default for every penalty. It closes the scale ray outright,
+so the coefficient scale is stated rather than left to the prior, and it is
+the convention under which the $\tau$-calibrated intercept prior of `"v5"` is
+exact. `"free"` samples $\sigma$ from its full conditional, as the
+adaptive-lasso and lasso derivations also allow; its point estimates are as
+good, but its credible intervals are markedly wider, because the likelihood
+never identifies $\sigma$ and the prior alone settles where the chain sits
+along the ray.
+
+The two norm anchors go through the same rescaling step and differ only in how
+the constant is chosen. Both carry $\beta_0$ and the ALD inverse-scale $\sigma$
+along with the slopes. At the observed-data level the model is invariant under
+$(\beta_0, \beta, \sigma) \mapsto (c\beta_0, c\beta, \sigma/c)$. These
+projections are identification experiments rather than transitions of any
+derivation, and under `"v5"` the fit says so: the projection is an exact
+reparameterisation of the likelihood but not of the prior, so the chain does
+not target a derived posterior, and the fit warns and records
+`derived = FALSE`. You can see the constraint holding exactly, and $\sigma$
+absorbing the rescaling:
+
+```{r anchor-demo}
+f_sig  <- bbqr(y ~ x1 + x2 + x3 + x4 + x5, dat, anchor = "sigma1",
+               ndraw = 2000, burn = 500)
+f_norm <- bbqr(y ~ x1 + x2 + x3 + x4 + x5, dat, anchor = "norm1",
+               ndraw = 2000, burn = 500)
+
+c(sigma1_scale_fixed  = all(f_sig$sigma == 1),
+  norm1_unit_norm     = all(abs(sqrt(f_norm$beta0^2 +
+                                     rowSums(f_norm$beta^2)) - 1) < 1e-8),
+  norm1_sigma_moves   = sd(f_norm$sigma) > 0,
+  sigma1_derived      = f_sig$derived,
+  norm1_derived       = f_norm$derived)
+```
+
+## When the anchor matters
+
+On easy data the anchor is nearly irrelevant. (The projection-anchor warning
+shown above is suppressed in the comparisons that follow; it would otherwise
+appear once per projected fit.)
+
+```{r easy}
+anch <- c("sigma1", "free", "beta1", "norm1", "normslopes")
+easy <- sapply(anch, function(a)
+  cosine(coef(suppressWarnings(
+    bbqr(y ~ x1 + x2 + x3 + x4 + x5, dat, anchor = a,
+         ndraw = 2000, burn = 500)))[-1], truth))
+round(easy, 4)
+```
+
+Now make the problem hard — an extreme quantile, heavy-tailed errors, and a
+badly imbalanced outcome:
+
+```{r hard}
+lat  <- as.vector(X %*% truth) + rt(n, df = 3)
+yh   <- as.numeric(lat + quantile(-lat, 0.85) > 0)
+hard <- data.frame(y = yh, X)
+
+res <- sapply(anch, function(a)
+  cosine(coef(suppressWarnings(
+    bbqr(y ~ x1 + x2 + x3 + x4 + x5, hard, quantile = 0.05,
+         anchor = a, ndraw = 3000, burn = 750)))[-1], truth))
+round(res, 4)
+```
+
+The ordering here is a single draw and will move from seed to seed, but the
+pattern is the one that holds across a full factorial study: anchors that
+constrain the *norm of the coefficient vector* degrade on hard problems, while
+fixing the error scale or a single coordinate does not.
+
+The mechanism is that the rescaling step is a symmetry of the likelihood but
+**not** of the penalised posterior. The shrinkage layer is stated on a fixed
+scale, so renormalising the coefficients every sweep moves them relative to the
+penalty. The prediction that follows — and it holds — is that the norm anchors
+are harmless when the prior on $\beta$ is vague, and damaging when it is
+informative on the scale the coefficients occupy. With `penalty = "none"` at
+its default `beta_var = 100` they cost nothing; tighten that prior far enough
+and they break in the same way.
+
+## Practical guidance
+
+- The defaults — `model = "v5"`, `anchor = "sigma1"`, no clamps — sample the
+  derived V5 posterior: proper $\mathrm{Gamma}(2, 2)$ priors on $\omega$ and
+  $\delta$, the $\tau$-calibrated intercept prior, and $\sigma$ held at 1.
+  Use `anchor = "free"` when you want $\sigma$ sampled from its full
+  conditional as the appendix also allows, and expect wider intervals. Do not
+  set `beta_delta = 0`: the flat prior leaves the adaptive-lasso posterior
+  improper, so $\delta$ drifts and the $\lambda_j^2$ homogenise until the
+  penalty is no longer adaptive.
+- Use `model = "v3"` only to reproduce published results. Its posterior does
+  not exist, the print method says so, and the numbers it produces depend on
+  chain length and seed.
+- Avoid `"norm1"` and `"normslopes"` with a penalty unless you specifically
+  want to study them. They are offered because the comparison is the point of
+  this package, not because they are recommended, and under `"v5"` they are
+  flagged as `derived = FALSE`.
+- Use `standardize = TRUE` whenever the covariates are on different scales.
+  The penalty is stated on the scale of the design matrix as supplied, so
+  unscaled covariates are shrunk by very different relative amounts; and
+  under `"v5"` there is no proper prior on $\omega$ that would make the
+  hierarchy equivariant in the predictor scale, so standardising is what
+  makes the prior mean the same thing across data sets.
+- Compare directions, not magnitudes, across anchors.
+
+## Other outputs
+
+```{r other}
+p <- predict(fit, newdata = dat, type = "response")
+round(quantile(p, c(0, .25, .5, .75, 1)), 3)
+
+mean(predict(fit, newdata = dat, type = "class") == y)
+```
+
+Several quantiles at once returns one fit per level:
+
+```{r multi}
+mfit <- bbqr(y ~ x1 + x2 + x3 + x4 + x5, dat, quantile = c(0.25, 0.5, 0.75),
+             ndraw = 1500, burn = 400)
+round(coef(mfit), 3)
+```
+
+## When the response is observed
+
+Everything above is about the binary case, where the threshold destroys the
+scale and you have to choose an anchor to get it back. If the response is
+observed rather than thresholded, that problem disappears, and `cbqr()` is the
+entry point. The three penalties carry over, and so does the corrected
+hierarchy. The `prior()` constructor and the `model` switch do not: continuous
+fits take a plain named list and ship a single hierarchy.
+
+```{r cont}
+cd <- data.frame(x1 = rnorm(150), x2 = rnorm(150))
+cd$y <- 2 + 1.5 * cd$x1 - cd$x2 + rnorm(150)
+
+cfit <- cbqr(y ~ x1 + x2, cd, quantile = 0.5, penalty = "alasso",
+             ndraw = 1500, burn = 400)
+round(coef(cfit), 3)
+```
+
+Three things differ, and each is forced by the response being observed rather
+than chosen for convenience.
+
+**No anchor.** The data identify the scale, so `sigma` is sampled every sweep;
+the anchors would be misspecifications rather than competing conventions. It is
+a reported parameter now:
+
+```{r cont-sigma}
+round(mean(cfit$sigma), 3)
+```
+
+**A new `q`, whose default differs by penalty.** `q` is the exponent on
+`sigma` in the local-scale prior rate, $\sigma^q / (2\lambda_j^2)$. The
+defaults are inherited from the published penalties, not picked: the lasso
+penalty $\lambda|\beta_j|$ gives `q = 0` and the adaptive penalty
+$(\sqrt{\sigma}/\lambda_j)|\beta_j|$ gives `q = 1`. Holding `sigma` fixed, as
+the binary model does, makes those two the same sampler — which is why the
+choice never had to be faced before. `q = 2` is the response-scale equivariant
+option.
+
+**`standardize` defaults to `TRUE` here, and scales `y` as well as `X`.** No
+proper hierarchy is exactly response-scale equivariant, so fixing the scale is
+part of the specification. Draws are mapped back to the original units, so
+`coef()` is on the scale of your data either way.
+
+Finally, `predict()` on a `cbqr` fit returns the fitted conditional quantile
+rather than a probability:
+
+```{r cont-pred}
+round(head(predict(cfit, newdata = cd), 4), 3)
+```
+
+## References
+
+Rubio Garcia, F. (2023). Bayesian adaptive lasso binary quantile regression
+with hybrid resampling for classification of imbalanced data. M.S. thesis,
+Wichita State University.
+<https://soar.wichita.edu/entities/publication/a2f86232-4704-4ec2-b685-751e7b04ec42>
+
+Benoit, D. F. and Van den Poel, D. (2012). Binary quantile regression: a
+Bayesian approach based on the asymmetric Laplace distribution. *Journal of
+Applied Econometrics*, 27(7), 1174–1188.
+
+Benoit, D. F., Al-Hamzawi, R. and Yu, K. (2013). Bayesian lasso binary quantile
+regression. *Computational Statistics*, 28(6), 2861–2873.
+
+Kozumi, H. and Kobayashi, G. (2011). Gibbs sampling methods for Bayesian
+quantile regression. *Journal of Statistical Computation and Simulation*,
+81(11), 1565–1578.

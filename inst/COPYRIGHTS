@@ -1,0 +1,37 @@
+The bbqr package as a whole is distributed under GPL (>= 2).
+
+Third-party components
+----------------------
+
+src/wrapper.c
+
+    The four-line bridge exposing R's RNG (GetRNGstate, PutRNGstate,
+    unif_rand, norm_rand) to Fortran is taken from the bayesQR package by
+    Dries F. Benoit, Rahim Al-Hamzawi, Keming Yu and Dirk Van den Poel,
+    distributed on CRAN under GPL (>= 2). The general layout of the package,
+    including the convention of handling the intercept separately from the
+    penalised slopes, also follows bayesQR.
+
+    bayesQR is described in:
+      Benoit, D. F. and Van den Poel, D. (2017). bayesQR: A Bayesian Approach
+      to Quantile Regression. Journal of Statistical Software, 76(7), 1-32.
+      doi:10.18637/jss.v076.i07
+
+    These authors are credited in the Authors@R field of DESCRIPTION with the
+    roles "ctb" (contributor) and, for Dries F. Benoit, "cph" (copyright
+    holder).
+
+Original components
+-------------------
+
+The three MCMC kernels shipped in this package were written for it:
+
+    src/QRb_BQR_mcmc.f95   unpenalised binary quantile regression,
+                           implementing Benoit and Van den Poel (2012)
+    src/QRb_L_mcmc.f95     lasso binary quantile regression,
+                           implementing Benoit, Al-Hamzawi and Yu (2013)
+    src/QRb_AL_mcmc.f95    adaptive-lasso binary quantile regression, with
+                           the identification anchors described in ?bbqr
+
+They implement published algorithms, which are cited on the corresponding
+help pages, but the code is not derived from the bayesQR kernels.

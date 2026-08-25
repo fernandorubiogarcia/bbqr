@@ -1,0 +1,14 @@
+# R build artifacts
+*.o
+*.so
+*.dll
+*.dylib
+.Rhistory
+.RData
+.Rproj.user/
+src/*.mod
+
+# check / build output
+..Rcheck/
+*.Rcheck/
+*.tar.gz

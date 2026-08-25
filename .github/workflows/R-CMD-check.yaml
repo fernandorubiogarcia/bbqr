@@ -1,0 +1,70 @@
+# R CMD check on the platforms a CRAN submission is judged on, including
+# R-devel: CRAN pretests against devel, not release, so a devel-only failure
+# would otherwise surface as a reviewer's rejection rather than here.
+#
+# The Fortran kernels need gfortran: r-lib/actions/setup-r installs it on
+# macOS and Windows (via Rtools); on Ubuntu it comes with r-base-dev.
+#
+# TinyTeX is installed so the checks build the PDF reference manual. Without
+# it the check runs --no-manual and never exercises the Rd-to-LaTeX path,
+# which is where malformed \eqn and \describe markup shows up.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+name: R-CMD-check
+
+permissions: read-all
+
+jobs:
+  R-CMD-check:
+    runs-on: ${{ matrix.config.os }}
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: macos-latest,   r: 'release'}
+          - {os: windows-latest, r: 'release'}
+          - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,  r: 'release'}
+          - {os: ubuntu-latest,  r: 'oldrel-1'}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true
+
+      # TINYTEX_INSTALLER chooses the bundle. The action's default, TinyTeX-1,
+      # carries every .sty Rd.sty asks for but not the makeindex *binary*, and
+      # R CMD check builds the reference manual with an index first -- so
+      # without makeindex every job records "checking PDF version of manual
+      # ... WARNING", and error-on: warning turns that into a failed job. The
+      # larger TinyTeX bundle already contains makeindex, which is steadier
+      # than adding it with tlmgr afterwards: tlmgr.bat is not resolvable from
+      # every runner's default shell, and a tlmgr install would also put a
+      # CTAN mirror on the critical path of every job.
+      - uses: r-lib/actions/setup-tinytex@v2
+        env:
+          TINYTEX_INSTALLER: TinyTeX
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
+          args: 'c("--as-cran")'

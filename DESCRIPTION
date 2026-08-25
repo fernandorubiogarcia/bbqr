@@ -1,0 +1,49 @@
+Package: bbqr
+Type: Package
+Title: Bayesian Quantile Regression with Lasso and Adaptive Lasso
+Version: 0.3.0
+Authors@R: c(
+    person("Fernando", "Rubio Garcia", email = "rubiogarciaf@newmanu.edu",
+           role = c("aut", "cre")),
+    person("Dries F.", "Benoit", role = c("ctb", "cph"),
+           comment = "Author of 'bayesQR', from which the Fortran RNG wrapper and package layout are derived"),
+    person("Rahim", "Al-Hamzawi", role = "ctb"),
+    person("Keming", "Yu", role = "ctb"),
+    person("Dirk", "Van den Poel", role = "ctb"))
+Description: Markov chain Monte Carlo samplers for Bayesian quantile
+    regression, based on the asymmetric Laplace distribution and the
+    location-scale mixture representation of Kozumi and Kobayashi (2011)
+    <doi:10.1080/00949655.2010.496117>. A binary response and an observed
+    continuous response are both supported, each with three penalty layers
+    behind one interface: no penalty, following Benoit and Van den Poel (2012)
+    <doi:10.1002/jae.1216>; the Bayesian lasso, following Benoit, Al-Hamzawi
+    and Yu (2013) <doi:10.1007/s00180-013-0407-8>; and the Bayesian adaptive
+    lasso of Rubio Garcia (2023)
+    <https://soar.wichita.edu/entities/publication/a2f86232-4704-4ec2-b685-751e7b04ec42>.
+    In the binary family each is available as published and in a corrected
+    form, the default, in which every improper prior component is replaced by
+    a proper one so that the posterior exists unconditionally; the continuous
+    family ships the corrected form only. The continuous adaptive-lasso layer
+    at its default reproduces the penalty of Alhamzawi, Yu and Benoit (2012)
+    <doi:10.1177/1471082X1101200304>. A binary threshold model identifies
+    the coefficient vector only up to a positive scale, so the binary samplers
+    expose the identification anchor as an explicit argument, allowing fixing
+    the scale of the error distribution, fixing a single coefficient, and
+    constraining the norm of the coefficient vector to be compared directly;
+    an observed response identifies the scale, so the continuous samplers have
+    no anchor and draw it every sweep. The MCMC cores are written in Fortran
+    and called from R.
+License: GPL (>= 2)
+Copyright: See inst/COPYRIGHTS for the attribution of third-party
+    components inherited from the 'bayesQR' package.
+Encoding: UTF-8
+Depends: R (>= 4.2)
+Imports: graphics, stats, utils
+Suggests: testthat (>= 3.0.0), coda, knitr, rmarkdown, quantreg
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+NeedsCompilation: yes
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+URL: https://github.com/fernandorubiogarcia/bbqr
+BugReports: https://github.com/fernandorubiogarcia/bbqr/issues
