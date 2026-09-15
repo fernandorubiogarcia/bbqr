@@ -3,6 +3,7 @@
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/fernandorubiogarcia/bbqr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fernandorubiogarcia/bbqr/actions/workflows/R-CMD-check.yaml)
 [![License: GPL (>= 2)](https://img.shields.io/badge/License-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![CRAN status](https://www.r-pkg.org/badges/version/bbqr)](https://CRAN.R-project.org/package=bbqr)
 [![R >= 4.2](https://img.shields.io/badge/R-%3E%3D%204.2-blue.svg)](https://cran.r-project.org/)
 <!-- badges: end -->
 
@@ -40,12 +41,18 @@ which only the prior can settle.
 ## Installation
 
 ```r
+install.packages("bbqr")
+```
+
+The development version:
+
+```r
 # install.packages("remotes")
 remotes::install_github("fernandorubiogarcia/bbqr")
 ```
 
-Building from source requires a Fortran compiler (Rtools on Windows,
-`gfortran` elsewhere).
+CRAN ships Windows and macOS binaries. Building from source requires a Fortran
+compiler (Rtools on Windows, `gfortran` elsewhere).
 
 ## Usage
 

@@ -10,7 +10,7 @@
 
 # bbqr 0.1.0
 
-First release, submitted to CRAN on 2026-08-25.
+First release. Submitted to CRAN on 2026-08-25, published 2026-09-08.
 
 The package went through three internal revisions before this one. None was
 released anywhere, so there is no upgrade path to describe -- but the decisions
